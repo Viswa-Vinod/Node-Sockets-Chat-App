@@ -10,16 +10,17 @@ const { generateMessage } = require("./utils/message");
 io.on("connection", socket => {
 	console.log("new user connected");
 	socket.emit(
-		"welcomeMsg",
+		"newMessage",
 		generateMessage("Admin", "Welcome to the chat app")
 	);
 	socket.broadcast.emit(
-		"newUserJoined",
+		"newMessage",
 		generateMessage("Admin", "New User Joined")
 	);
-	socket.on("createMessage", createdMessage => {
+	socket.on("createMessage", (createdMessage, ackCB) => {
 		const { from, text } = createdMessage;
 		io.emit("newMessage", generateMessage(from, text));
+		ackCB("ack from server");
 	});
 	socket.on("disconnect", () => {
 		console.log("client disconnected");
