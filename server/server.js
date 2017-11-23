@@ -5,7 +5,7 @@ const app = express();
 const server = http.createServer(app);
 const socketIO = require("socket.io");
 const io = socketIO(server);
-const { generateMessage } = require("./utils/message");
+const { generateMessage, generateLocationMsg } = require("./utils/message");
 
 io.on("connection", socket => {
 	console.log("new user connected");
@@ -21,6 +21,13 @@ io.on("connection", socket => {
 		const { from, text } = createdMessage;
 		io.emit("newMessage", generateMessage(from, text));
 		ackCB("ack from server");
+	});
+
+	socket.on("createLocationMsg", ({ latitude, longitude }) => {
+		io.emit(
+			"newLocationMsg",
+			generateLocationMsg("Admin", latitude, longitude)
+		);
 	});
 	socket.on("disconnect", () => {
 		console.log("client disconnected");
