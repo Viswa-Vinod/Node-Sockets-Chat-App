@@ -20,7 +20,7 @@ io.on("connection", socket => {
 	socket.on("createMessage", (createdMessage, ackCB) => {
 		const { from, text } = createdMessage;
 		io.emit("newMessage", generateMessage(from, text));
-		ackCB("ack from server");
+		ackCB();
 	});
 
 	socket.on("createLocationMsg", ({ latitude, longitude }) => {
