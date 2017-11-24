@@ -40,16 +40,31 @@ io.on("connection", socket => {
 	});
 
 	socket.on("createMessage", (createdMessage, ackCB) => {
-		const { from, text } = createdMessage;
-		io.emit("newMessage", generateMessage(from, text));
+		var user = users.getUser(socket.id);
+
+		user && isRealString(createdMessage.text)
+			? io
+					.to(user.room)
+					.emit(
+						"newMessage",
+						generateMessage(user.name, createdMessage.text)
+					)
+			: null;
+
 		ackCB();
 	});
 
 	socket.on("createLocationMsg", ({ latitude, longitude }) => {
-		io.emit(
-			"newLocationMsg",
-			generateLocationMsg("Admin", latitude, longitude)
-		);
+		var user = users.getUser(socket.id);
+
+		user
+			? io
+					.to(user.room)
+					.emit(
+						"newLocationMsg",
+						generateLocationMsg(user.name, latitude, longitude)
+					)
+			: null;
 	});
 	socket.on("disconnect", () => {
 		var user = users.removeUser(socket.id);
