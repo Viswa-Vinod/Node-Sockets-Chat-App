@@ -12,26 +12,33 @@ const { Users } = require("./utils/users");
 var users = new Users();
 
 io.on("connection", socket => {
-	console.log("new user connected");
-
+	console.log("got a connection");
+	socket.on("login", cb => {
+		return users.getRoomsList() ? cb(users.getRoomsList()) : cb();
+	});
 	socket.on("join", (params, callback) => {
 		if (!isRealString(params.name) || !isRealString(params.room)) {
 			return callback("name and room name are required");
 		}
 
-		socket.join(params.room);
+		var room = params.room.toLowerCase();
+
+		if (users.alreadyExists(params.name, room)) {
+			return callback(`User ${params.name} already exists in the room`);
+		}
+
+		socket.join(room);
+
 		users.removeUser(socket.id);
 
-		users.addUser(socket.id, params.name, params.room);
-		io
-			.to(params.room)
-			.emit("updateUserList", users.getUserList(params.room));
+		users.addUser(socket.id, params.name, room);
+		io.to(room).emit("updateUserList", users.getUserList(room));
 		socket.emit(
 			"newMessage",
 			generateMessage("Admin", "Welcome to the chat app")
 		);
 		socket.broadcast
-			.to(params.room)
+			.to(room)
 			.emit(
 				"newMessage",
 				generateMessage("Admin", `${params.name} has joined`)
@@ -86,6 +93,9 @@ const publicPath = path.join(__dirname, "..", "/public");
 const port = process.env.PORT || 3000;
 
 app.use(express.static(publicPath));
+app.get("/", (req, res) => {
+	console.log(users.getRommsList());
+});
 server.listen(port, () => {
 	console.log("server listening on ", port);
 });
